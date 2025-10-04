@@ -29,10 +29,9 @@ M.get_width_longest_buffer_name = function()
   local buffers = M.get_buffers_as_table()
   local longest_buffer_name = 0
   for _, buffer in ipairs(buffers) do
-    local buffer_name = buffer.name
-    local buffer_name_length = string.len(buffer_name)
-    if buffer_name_length > longest_buffer_name then
-      longest_buffer_name = buffer_name_length
+    local buffer_name_width = vim.fn.strwidth(buffer.name)
+    if buffer_name_width > longest_buffer_name then
+      longest_buffer_name = buffer_name_width
     end
   end
   return longest_buffer_name

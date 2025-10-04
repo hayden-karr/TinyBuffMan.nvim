@@ -28,8 +28,10 @@ local function get_diagnostics(bufnr)
   return diags
 end
 
+local has_devicons = Devicons ~= nil
+
 local get_buffer_icon = function(buffer)
-  if Devicons == nil then
+  if not has_devicons then
     return "", "Normal"
   end
   local icon, icon_hl = Devicons.get_icon(buffer.name, buffer.extension, { default = true })
@@ -228,11 +230,11 @@ local add_modified_highlight = function(idx, buffer)
   })
 end
 
-local add_diagnostics_icons = function(idx, buffer)
+local add_diagnostics_icons = function(idx, buffer, cached_diags)
   if TBM_BUF_ID == nil then
     return 0
   end
-  local diags = get_diagnostics(buffer.number)
+  local diags = cached_diags or {}
   local count = 0
   for _, diagnostic in ipairs(diags) do
     vim.api.nvim_buf_set_extmark(TBM_BUF_ID, TBM_NS_ID, idx - 1, 0, {
@@ -253,20 +255,19 @@ function M.toggle()
 
   local valid_buffers = BufferUtils.get_buffers_as_table()
 
-  -- Find the longest TOTAL line (name + diagnostics for THAT buffer)
-  local longest_total_width = 0
+  -- Cache diagnostics for all buffers upfront
+  local buffer_diagnostics = {}
+  if Config.get().diagnostics then
+    for _, buffer in ipairs(valid_buffers) do
+      buffer_diagnostics[buffer.number] = get_diagnostics(buffer.number)
+    end
+  end
 
+  -- Width calculation
+  local longest_total_width = 0
   for _, buffer in ipairs(valid_buffers) do
     local buffer_name_width = vim.fn.strwidth(buffer.name)
-
-    -- Get diagnostic count for THIS specific buffer
-    local diagnostic_count = 0
-    if Config.get().diagnostics then
-      local diags = get_diagnostics(buffer.number)
-      diagnostic_count = #diags
-    end
-
-    -- Calculate total width for THIS line
+    local diagnostic_count = buffer_diagnostics[buffer.number] and #buffer_diagnostics[buffer.number] or 0
     local diagnostic_width = diagnostic_count * 3
     local total_for_this_buffer = buffer_name_width + diagnostic_width
 
@@ -309,7 +310,7 @@ function M.toggle()
     add_ft_icon_highlight(idx, buffer)
     add_modified_highlight(idx, buffer)
     if Config.get().diagnostics then
-      add_diagnostics_icons(idx, buffer)
+      add_diagnostics_icons(idx, buffer, buffer_diagnostics[buffer.number])
     end
   end
 
