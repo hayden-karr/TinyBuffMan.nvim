@@ -9,6 +9,7 @@ local M = {}
 ---@field diagnostics boolean Show diagnostics
 ---@field width integer|nil Window width (auto if nil)
 ---@field height integer|nil Window height (auto if nil)
+---@field confirm_delete boolean Confirm before deleting modified buffers
 
 ---@type BafaConfig
 M.defaults = {
@@ -18,6 +19,7 @@ M.defaults = {
   border = "rounded",
   style = "minimal",
   diagnostics = true,
+  confirm_delete = true,
 }
 
 M.options = M.defaults

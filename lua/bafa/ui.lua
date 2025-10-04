@@ -100,7 +100,11 @@ function M.delete_menu_item()
   end
 
   local function delete_buffer()
-    vim.api.nvim_buf_delete(selected_buffer.number, { force = true })
+    local ok, err = pcall(vim.api.nvim_buf_delete, selected_buffer.number, { force = true })
+    if not ok then
+      vim.notify("Failed to delete buffer: " .. tostring(err), vim.log.levels.ERROR)
+      return
+    end
 
     if selected_line_number == 1 then
       close_window()
@@ -110,7 +114,9 @@ function M.delete_menu_item()
     end
   end
 
-  if vim.bo[selected_buffer.number].modified then
+  local should_confirm = Config.get().confirm_delete and vim.bo[selected_buffer.number].modified
+
+  if should_confirm then
     vim.ui.select({ "Yes", "No" }, { prompt = "Buffer is modified. Delete anyway?" }, function(choice)
       if choice == "Yes" then
         delete_buffer()

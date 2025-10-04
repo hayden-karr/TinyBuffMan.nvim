@@ -23,7 +23,7 @@ M.is_valid_buffer = function(buffer_number)
   return false
 end
 
---Get the width of the longest buffer name
+---Get the width of the longest buffer name
 ---@return integer
 M.get_width_longest_buffer_name = function()
   local buffers = M.get_buffers_as_table()

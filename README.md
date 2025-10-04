@@ -64,6 +64,7 @@ require('lazy').setup({
       border = "rounded",
       style = "minimal",
       diagnostics = true,
+      confirm_delete = true,
     }
   },
 })
