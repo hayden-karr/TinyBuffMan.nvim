@@ -20,8 +20,23 @@ end
 ---@param item string Full path
 ---@return string Relative path
 M.get_normalized_path = function(item)
-  local relative_path = vim.fn.fnamemodify(item, ":.")
-  return relative_path
-end
+  -- Try to find git root
+  local git_root = vim.fn.systemlist("git -C " .. vim.fn.fnamemodify(item, ":h") .. " rev-parse --show-toplevel")[1]
 
+  if git_root and vim.v.shell_error == 0 then
+    -- Make relative to git root
+    if vim.startswith(item, git_root) then
+      return item:sub(#git_root + 2)
+    end
+  end
+
+  -- Fall back to cwd-relative
+  local cwd = vim.fn.getcwd()
+  if vim.startswith(item, cwd) then
+    return item:sub(#cwd + 2)
+  end
+
+  -- Last resort: just the filename
+  return vim.fn.fnamemodify(item, ":t")
+end
 return M
