@@ -50,7 +50,7 @@ local function create_window()
   local buffer_longest_name_width = BufferUtils.get_width_longest_buffer_name()
   local buffer_lines = BufferUtils.get_lines_buffer_names()
   local width = math.min(max_width, buffer_longest_name_width + 10)
-  local height = math.min(max_height, buffer_lines + 2)
+  local height = math.min(max_height, buffer_lines)
 
   BAFA_WIN_ID = vim.api.nvim_open_win(bufnr, true, {
     title = bafa_config.title,
@@ -136,15 +136,20 @@ function M.delete_menu_item()
   local should_confirm = Config.get().confirm_delete and vim.bo[selected_buffer.number].modified
 
   if should_confirm then
-    -- CRITICAL FIX: Clear the BufLeave autocmd BEFORE showing vim.ui.select
-    -- Otherwise BufLeave fires when the select dialog opens and closes our window!
+    -- Clear autocmds before showing dialog
     vim.api.nvim_clear_autocmds({ group = "BafaMenu", buffer = BAFA_BUF_ID })
 
-    vim.ui.select({ "Yes", "No" }, { prompt = "Buffer is modified. Delete anyway?" }, function(choice)
+    vim.ui.select({ "Yes", "No" }, {
+      prompt = "Buffer is modified. Delete anyway?",
+      format_item = function(item)
+        return item
+      end,
+    }, function(choice)
+      -- FIXED: choice is the actual string "Yes" or "No", not an index
       if choice == "Yes" then
         delete_buffer()
       else
-        -- User cancelled, just close the window
+        -- User said No or cancelled - just close
         close_window()
       end
     end)
@@ -198,11 +203,16 @@ local add_modified_highlight = function(idx, buffer)
   local fg = hl.fg or 0xffff00
   vim.api.nvim_set_hl(0, hl_name, { fg = fg })
 
-  -- FIXED: Simple approach - highlight from column 4 to end of line
-  -- This matches the original behavior where icons weren't cut off
+  -- FIXED: Find where the buffer name actually starts after the icon
   local line = vim.api.nvim_buf_get_lines(BAFA_BUF_ID, idx - 1, idx, false)[1]
+  local icon, _ = get_buffer_icon(buffer)
 
-  vim.api.nvim_buf_set_extmark(BAFA_BUF_ID, BAFA_NS_ID, idx - 1, 4, {
+  -- The format is: "  " (2 chars) + icon + " " (1 char) + buffer_name
+  -- We need to find the byte position where buffer name starts
+  local prefix = "  " .. icon .. " "
+  local name_start_byte = #prefix
+
+  vim.api.nvim_buf_set_extmark(BAFA_BUF_ID, BAFA_NS_ID, idx - 1, name_start_byte, {
     end_line = idx - 1,
     end_col = #line,
     hl_group = hl_name,
