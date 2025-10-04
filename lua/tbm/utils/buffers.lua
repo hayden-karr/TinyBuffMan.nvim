@@ -17,7 +17,7 @@ M.is_valid_buffer = function(buffer_number)
   local buffer_name = vim.api.nvim_buf_get_name(buffer_number)
   local is_listed = vim.bo[buffer_number].buflisted == true
   local is_not_tbm_buffer = buffer_name ~= "tbm-menu"
-  if buffer_name ~= "" and is_not_tbm_buffer and is_listed then
+  if is_not_tbm_buffer and is_listed then
     return true
   end
   return false
@@ -70,7 +70,15 @@ M.get_buffers_as_table = function()
     if is_valid_buffer then
       local last_used = vim.fn.getbufinfo(buffer_number)[1].lastused
       local buffer_name = vim.api.nvim_buf_get_name(buffer_number)
-      local buffer_file_name = text_utils.get_normalized_path(buffer_name) or "untitled"
+
+      -- Handle unnamed buffers
+      local buffer_file_name
+      if buffer_name == "" then
+        buffer_file_name = "[No Name]"
+      else
+        buffer_file_name = text_utils.get_normalized_path(buffer_name)
+      end
+
       local is_modified = vim.bo[buffer_number].modified == true
       local extension = vim.fn.fnamemodify(buffer_name, ":e")
       local buffer = {
