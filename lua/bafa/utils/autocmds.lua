@@ -1,9 +1,33 @@
 local M = {}
 
 function M.defaults(bufnr)
-  vim.cmd(string.format("autocmd BufWriteCmd <buffer=%s> lua require('bafa.ui').on_menu_save()", bufnr))
-  vim.cmd(string.format("autocmd BufModifiedSet <buffer=%s> set nomodified", bufnr))
-  vim.cmd("autocmd BufLeave <buffer> ++nested ++once silent lua require('bafa.ui').toggle()")
+  local augroup = vim.api.nvim_create_augroup("BafaMenu", { clear = true })
+
+  vim.api.nvim_create_autocmd("BufWriteCmd", {
+    group = augroup,
+    buffer = bufnr,
+    callback = function()
+      require("bafa.ui").on_menu_save()
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("BufModifiedSet", {
+    group = augroup,
+    buffer = bufnr,
+    callback = function()
+      vim.bo[bufnr].modified = false
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("BufLeave", {
+    group = augroup,
+    buffer = bufnr,
+    nested = true,
+    once = true,
+    callback = function()
+      require("bafa.ui").toggle()
+    end,
+  })
 end
 
 return M

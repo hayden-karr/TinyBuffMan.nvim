@@ -53,19 +53,23 @@ M.get_buffers_as_table = function()
       local buffer_name = vim.api.nvim_buf_get_name(buffer_number)
       local buffer_file_name = text_utils.get_normalized_path(buffer_name) or "untitled"
       local is_modified = vim.bo[buffer_number].modified == true
+      local extension = vim.fn.fnamemodify(buffer_name, ":e")
       local buffer = {
         name = buffer_file_name,
         path = buffer_name,
         number = buffer_number,
         last_used = last_used,
         is_modified = is_modified,
+        extension = extension,
       }
       table.insert(buffers, buffer)
-      table.sort(buffers, function(a, b)
-        return a.last_used > b.last_used
-      end)
     end
   end
+
+  table.sort(buffers, function(a, b)
+    return a.last_used > b.last_used
+  end)
+
   return buffers
 end
 

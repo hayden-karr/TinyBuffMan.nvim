@@ -81,52 +81,72 @@ function M.select_menu_item()
     return
   end
   close_window()
-  vim.api.nvim_set_current_buf(selected_buffer.number)
+  local ok, err = pcall(vim.api.nvim_set_current_buf, selected_buffer.number)
+  if not ok then
+    vim.notify("Failed to switch to buffer: " .. tostring(err), vim.log.levels.ERROR)
+  end
 end
 
 function M.delete_menu_item()
-  local choice = 1
   if BAFA_BUF_ID == nil or not vim.api.nvim_buf_is_valid(BAFA_BUF_ID) then
     return
   end
+
   local selected_line_number = vim.api.nvim_win_get_cursor(0)[1]
   local selected_buffer = BufferUtils.get_buffer_by_index(selected_line_number)
+
   if selected_buffer == nil then
     return
   end
-  if vim.bo[selected_buffer.number].modified then
-    choice = vim.fn.inputlist({ "Yes", "No" })
-  end
-  if choice ~= 1 then
-    return
-  end
-  if selected_line_number == 1 then
-    close_window()
-    vim.api.nvim_buf_delete(selected_buffer.number, { force = true })
-    M.toggle()
-    return
-  end
-  vim.api.nvim_buf_delete(selected_buffer.number, { force = true })
-  vim.api.nvim_buf_set_lines(BAFA_BUF_ID, selected_line_number - 1, selected_line_number, false, {})
-end
 
-function M.on_menu_save()
-  print(vim.inspect("on_menu_save"))
+  local function delete_buffer()
+    vim.api.nvim_buf_delete(selected_buffer.number, { force = true })
+
+    if selected_line_number == 1 then
+      close_window()
+      M.toggle()
+    else
+      vim.api.nvim_buf_set_lines(BAFA_BUF_ID, selected_line_number - 1, selected_line_number, false, {})
+    end
+  end
+
+  if vim.bo[selected_buffer.number].modified then
+    vim.ui.select({ "Yes", "No" }, { prompt = "Buffer is modified. Delete anyway?" }, function(choice)
+      if choice == "Yes" then
+        delete_buffer()
+      end
+    end)
+  else
+    delete_buffer()
+  end
 end
 
 --- Add highlight to the buffer icon
 ---@param idx number
 ---@param buffer table
 ---@return nil
+
+local _cached_hl_groups = {}
+
 local add_ft_icon_highlight = function(idx, buffer)
   if BAFA_BUF_ID == nil then
     return
   end
+
   local _, icon_hl_group = get_buffer_icon(buffer)
-  local icon_hl = vim.api.nvim_get_hl(0, { name = icon_hl_group }).fg
-  local hl_group = "BafaIcon" .. tostring(idx)
-  vim.api.nvim_set_hl(0, hl_group, { fg = string.format("#%06x", icon_hl) })
-  vim.api.nvim_buf_add_highlight(BAFA_BUF_ID, BAFA_NS_ID, hl_group, idx - 1, 2, 3)
+
+  if not _cached_hl_groups[icon_hl_group] then
+    local icon_hl = vim.api.nvim_get_hl(0, { name = icon_hl_group })
+    if icon_hl.fg then
+      local hl_group = "BafaIcon" .. icon_hl_group
+      vim.api.nvim_set_hl(0, hl_group, { fg = icon_hl.fg })
+      _cached_hl_groups[icon_hl_group] = hl_group
+    end
+  end
+
+  if _cached_hl_groups[icon_hl_group] then
+    vim.api.nvim_buf_add_highlight(BAFA_BUF_ID, BAFA_NS_ID, _cached_hl_groups[icon_hl_group], idx - 1, 2, 3)
+  end
 end
 
 --- Colors the buffer name if it is modified
