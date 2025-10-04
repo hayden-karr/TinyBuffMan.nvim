@@ -200,8 +200,12 @@ local add_modified_highlight = function(idx, buffer)
   local fg = hl.fg or 0xffff00
   vim.api.nvim_set_hl(0, hl_name, { fg = fg })
 
+  -- Get the line to calculate its length
+  local line = vim.api.nvim_buf_get_lines(BAFA_BUF_ID, idx - 1, idx, false)[1]
+
+  -- Highlight from column 4 to the end of the line
   vim.api.nvim_buf_set_extmark(BAFA_BUF_ID, BAFA_NS_ID, idx - 1, 4, {
-    end_col = -1,
+    end_col = #line,
     hl_group = hl_name,
   })
 end
