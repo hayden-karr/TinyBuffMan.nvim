@@ -100,7 +100,6 @@ function M.delete_menu_item()
     return
   end
 
-  -- Check if we're deleting the buffer we were viewing before opening Bafa
   local is_previous_buffer = PREVIOUS_BUF_ID and selected_buffer.number == PREVIOUS_BUF_ID
 
   local function delete_buffer()
@@ -109,7 +108,6 @@ function M.delete_menu_item()
       local buffers = BufferUtils.get_buffers_as_table()
       local next_buf = nil
 
-      -- Find another buffer to switch to
       for _, buf in ipairs(buffers) do
         if buf.number ~= selected_buffer.number then
           next_buf = buf.number
@@ -117,10 +115,8 @@ function M.delete_menu_item()
         end
       end
 
-      -- Update PREVIOUS_BUF_ID to the new buffer we're switching to
       PREVIOUS_BUF_ID = next_buf
 
-      -- Switch to next buffer or create new one before deleting
       if next_buf then
         vim.api.nvim_set_current_buf(next_buf)
       else
@@ -136,19 +132,24 @@ function M.delete_menu_item()
       return
     end
 
-    -- Refresh the menu
-    close_window()
-    M.toggle()
+    vim.schedule(function()
+      if BAFA_WIN_ID and vim.api.nvim_win_is_valid(BAFA_WIN_ID) then
+        close_window()
+        M.toggle()
+      end
+    end)
   end
 
-  -- Check if confirmation is needed based on config and if buffer is modified
+  -- Check if confirmation is needed
   local should_confirm = Config.get().confirm_delete and vim.bo[selected_buffer.number].modified
 
   if should_confirm then
+    -- vim.ui.select is async, so the callback will execute later
     vim.ui.select({ "Yes", "No" }, { prompt = "Buffer is modified. Delete anyway?" }, function(choice)
       if choice == "Yes" then
         delete_buffer()
       end
+      -- If "No" or closed, do nothing
     end)
   else
     delete_buffer()
@@ -200,13 +201,20 @@ local add_modified_highlight = function(idx, buffer)
   local fg = hl.fg or 0xffff00
   vim.api.nvim_set_hl(0, hl_name, { fg = fg })
 
-  -- Get the line to calculate its length
+  -- Get the line content to find where buffer name starts
   local line = vim.api.nvim_buf_get_lines(BAFA_BUF_ID, idx - 1, idx, false)[1]
 
-  -- Highlight from column 4 to the end of the line
-  vim.api.nvim_buf_set_extmark(BAFA_BUF_ID, BAFA_NS_ID, idx - 1, 4, {
-    end_col = #line,
+  -- Find where the buffer name actually starts (after "  " + icon + " ")
+  -- We'll highlight from after the icon and space to the end of line
+  local icon, _ = get_buffer_icon(buffer)
+  local prefix_len = 2 + vim.fn.strwidth(icon) + 1
+
+  -- Highlight from the buffer name to end of line using hl_eol
+  vim.api.nvim_buf_set_extmark(BAFA_BUF_ID, BAFA_NS_ID, idx - 1, prefix_len, {
     hl_group = hl_name,
+    end_line = idx - 1,
+    end_col = #line,
+    hl_eol = true,
   })
 end
 
@@ -241,9 +249,17 @@ function M.toggle()
   BAFA_BUF_ID = win_info.bufnr
   local valid_buffers = BufferUtils.get_buffers_as_table()
 
+  -- Track which line corresponds to the current buffer
+  local cursor_line = 1
+
   for idx, buffer in ipairs(valid_buffers) do
     local icon, _ = get_buffer_icon(buffer)
     contents[idx] = string.format("  %s %s", icon, buffer.name)
+
+    -- Find the line for the buffer we were on
+    if buffer.number == PREVIOUS_BUF_ID then
+      cursor_line = idx
+    end
   end
 
   vim.wo[BAFA_WIN_ID].number = true
@@ -267,6 +283,9 @@ function M.toggle()
   if has_diagnostics then
     vim.api.nvim_win_set_width(BAFA_WIN_ID, vim.api.nvim_win_get_width(BAFA_WIN_ID) + 4)
   end
+
+  -- Set cursor to the line of the buffer we were on
+  vim.api.nvim_win_set_cursor(BAFA_WIN_ID, { cursor_line, 0 })
 
   Keymaps.noop(BAFA_BUF_ID)
   Keymaps.defaults(BAFA_BUF_ID)
