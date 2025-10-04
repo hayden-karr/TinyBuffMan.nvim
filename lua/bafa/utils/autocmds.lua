@@ -3,14 +3,6 @@ local M = {}
 function M.defaults(bufnr)
   local augroup = vim.api.nvim_create_augroup("BafaMenu", { clear = true })
 
-  vim.api.nvim_create_autocmd("BufWriteCmd", {
-    group = augroup,
-    buffer = bufnr,
-    callback = function()
-      require("bafa.ui").on_menu_save()
-    end,
-  })
-
   vim.api.nvim_create_autocmd("BufModifiedSet", {
     group = augroup,
     buffer = bufnr,

@@ -161,10 +161,7 @@ local add_modified_highlight = function(idx, buffer)
   end
   local hl_name = "BafaModified"
   local hl = vim.api.nvim_get_hl(0, { name = hl_name, create = false })
-  local fg = "#ffff00"
-  if #hl ~= 0 then
-    fg = string.format("#%06x", hl.fg)
-  end
+  local fg = hl.fg or 0xffff00
   vim.api.nvim_set_hl(0, hl_name, { fg = fg })
   vim.api.nvim_buf_add_highlight(BAFA_BUF_ID, BAFA_NS_ID, hl_name, idx - 1, 4, -1)
 end

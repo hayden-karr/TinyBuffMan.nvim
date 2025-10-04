@@ -47,6 +47,7 @@ require('lazy').setup({
   { 'mistweaverco/bafa.nvim' },
 })
 ```
+
 ### Advanced configuration
 
 ```lua
@@ -75,4 +76,4 @@ require('lazy').setup({
 
 Opens up a floating window with your buffers.
 
-Press enter to select a buffer or press `dd` or `D` to delete a buffer.
+Press enter to select a buffer or press `d` to delete a buffer.

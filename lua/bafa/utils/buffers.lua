@@ -2,6 +2,17 @@ local text_utils = require("bafa.utils.text")
 
 local M = {}
 
+---@class BafaBuffer
+---@field name string The display name of the buffer
+---@field path string The full path to the buffer
+---@field number integer The buffer number
+---@field last_used integer Timestamp when buffer was last used
+---@field is_modified boolean Whether the buffer has unsaved changes
+---@field extension string The file extension
+
+---Check if a buffer is valid for display
+---@param buffer_number integer The buffer number to check
+---@return boolean
 M.is_valid_buffer = function(buffer_number)
   local buffer_name = vim.api.nvim_buf_get_name(buffer_number)
   local is_listed = vim.bo[buffer_number].buflisted == true
@@ -12,6 +23,8 @@ M.is_valid_buffer = function(buffer_number)
   return false
 end
 
+--Get the width of the longest buffer name
+---@return integer
 M.get_width_longest_buffer_name = function()
   local buffers = M.get_buffers_as_table()
   local longest_buffer_name = 0
@@ -25,11 +38,16 @@ M.get_width_longest_buffer_name = function()
   return longest_buffer_name
 end
 
+---Get the number of valid buffers
+---@return integer
 M.get_lines_buffer_names = function()
   local buffers = M.get_buffers_as_table()
   return #buffers
 end
 
+---Get a buffer by its index in the buffer list
+---@param buffer_index integer The 1-based index
+---@return BafaBuffer|nil
 M.get_buffer_by_index = function(buffer_index)
   local buffer_numbers = M.get_buffers_as_table()
   local buffer = buffer_numbers[buffer_index]
@@ -43,6 +61,8 @@ M.get_buffer_by_index = function(buffer_index)
   return buffer
 end
 
+---Get all valid buffers as a table
+---@return BafaBuffer[]
 M.get_buffers_as_table = function()
   local buffers = {}
   local buffer_numbers = vim.api.nvim_list_bufs()
