@@ -87,7 +87,7 @@ M.get_buffers_as_table = function()
   end
 
   table.sort(buffers, function(a, b)
-    return a.last_used > b.last_used
+    return a.number < b.number
   end)
 
   return buffers

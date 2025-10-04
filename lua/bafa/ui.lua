@@ -8,6 +8,7 @@ local BAFA_NS_ID = vim.api.nvim_create_namespace("bafa.nvim")
 
 local BAFA_WIN_ID = nil
 local BAFA_BUF_ID = nil
+local PREVIOUS_BUF_ID = nil
 
 local DIAGNOSTICS_LABELS = { "Error", "Warn", "Info", "Hint" }
 local DIAGNOSTICS_SIGNS = { " ", " ", " ", " " }
@@ -38,6 +39,7 @@ local function close_window()
   vim.api.nvim_win_close(BAFA_WIN_ID, true)
   BAFA_WIN_ID = nil
   BAFA_BUF_ID = nil
+  PREVIOUS_BUF_ID = nil
 end
 
 local function create_window()
@@ -98,12 +100,12 @@ function M.delete_menu_item()
     return
   end
 
-  local current_buf = vim.api.nvim_get_current_buf()
-  local is_current_buffer = selected_buffer.number == current_buf
+  -- Check if we're deleting the buffer we were viewing before opening Bafa
+  local is_previous_buffer = PREVIOUS_BUF_ID and selected_buffer.number == PREVIOUS_BUF_ID
 
   local function delete_buffer()
-    -- If deleting the current buffer, switch to another one first
-    if is_current_buffer then
+    -- If deleting the buffer we were on before opening Bafa, switch to another one first
+    if is_previous_buffer then
       local buffers = BufferUtils.get_buffers_as_table()
       local next_buf = nil
 
@@ -115,11 +117,15 @@ function M.delete_menu_item()
         end
       end
 
+      -- Update PREVIOUS_BUF_ID to the new buffer we're switching to
+      PREVIOUS_BUF_ID = next_buf
+
       -- Switch to next buffer or create new one before deleting
       if next_buf then
         vim.api.nvim_set_current_buf(next_buf)
       else
         vim.cmd("enew")
+        PREVIOUS_BUF_ID = vim.api.nvim_get_current_buf()
       end
     end
 
@@ -131,13 +137,8 @@ function M.delete_menu_item()
     end
 
     -- Refresh the menu
-    if selected_line_number == 1 then
-      close_window()
-      M.toggle()
-    else
-      close_window()
-      M.toggle()
-    end
+    close_window()
+    M.toggle()
   end
 
   -- Check if confirmation is needed based on config and if buffer is modified
@@ -225,6 +226,9 @@ function M.toggle()
     close_window()
     return
   end
+
+  -- Store the current buffer BEFORE opening the Bafa menu
+  PREVIOUS_BUF_ID = vim.api.nvim_get_current_buf()
 
   local win_info = create_window()
   local contents = {}
