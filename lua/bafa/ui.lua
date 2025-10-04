@@ -25,7 +25,7 @@ end
 
 local get_buffer_icon = function(buffer)
   if Devicons == nil then
-    return "", "Normal" -- fallback to default icon, when devicons is not available
+    return "", "Normal"
   end
   local icon, icon_hl = Devicons.get_icon(buffer.name, buffer.extension, { default = true })
   return icon, icon_hl
@@ -48,7 +48,6 @@ local function create_window()
   local max_height = vim.api.nvim_win_get_height(0)
   local buffer_longest_name_width = BufferUtils.get_width_longest_buffer_name()
   local buffer_lines = BufferUtils.get_lines_buffer_names()
-  -- preserve space for the icons
   local width = math.min(max_width, buffer_longest_name_width + 10)
   local height = math.min(max_height, buffer_lines + 2)
 
@@ -99,21 +98,49 @@ function M.delete_menu_item()
     return
   end
 
+  local current_buf = vim.api.nvim_get_current_buf()
+  local is_current_buffer = selected_buffer.number == current_buf
+
   local function delete_buffer()
+    -- If deleting the current buffer, switch to another one first
+    if is_current_buffer then
+      local buffers = BufferUtils.get_buffers_as_table()
+      local next_buf = nil
+
+      -- Find another buffer to switch to
+      for _, buf in ipairs(buffers) do
+        if buf.number ~= selected_buffer.number then
+          next_buf = buf.number
+          break
+        end
+      end
+
+      -- Switch to next buffer or create new one before deleting
+      if next_buf then
+        vim.api.nvim_set_current_buf(next_buf)
+      else
+        vim.cmd("enew")
+      end
+    end
+
+    -- Delete the buffer
     local ok, err = pcall(vim.api.nvim_buf_delete, selected_buffer.number, { force = true })
     if not ok then
       vim.notify("Failed to delete buffer: " .. tostring(err), vim.log.levels.ERROR)
       return
     end
 
+    -- Refresh the menu
     if selected_line_number == 1 then
       close_window()
       M.toggle()
     else
-      vim.api.nvim_buf_set_lines(BAFA_BUF_ID, selected_line_number - 1, selected_line_number, false, {})
+      close_window()
+      M.toggle()
     end
   end
 
+  -- Check if confirmation is needed based on config and if buffer is modified
   local should_confirm = Config.get().confirm_delete and vim.bo[selected_buffer.number].modified
 
   if should_confirm then
@@ -127,11 +154,10 @@ function M.delete_menu_item()
   end
 end
 
---- Add highlight to the buffer icon
+---Add highlight to the buffer icon
 ---@param idx number
 ---@param buffer table
 ---@return nil
-
 local _cached_hl_groups = {}
 
 local add_ft_icon_highlight = function(idx, buffer)
@@ -151,11 +177,14 @@ local add_ft_icon_highlight = function(idx, buffer)
   end
 
   if _cached_hl_groups[icon_hl_group] then
-    vim.api.nvim_buf_add_highlight(BAFA_BUF_ID, BAFA_NS_ID, _cached_hl_groups[icon_hl_group], idx - 1, 2, 3)
+    vim.api.nvim_buf_set_extmark(BAFA_BUF_ID, BAFA_NS_ID, idx - 1, 2, {
+      end_col = 3,
+      hl_group = _cached_hl_groups[icon_hl_group],
+    })
   end
 end
 
---- Colors the buffer name if it is modified
+---Colors the buffer name if it is modified
 ---@param idx number
 ---@param buffer table
 local add_modified_highlight = function(idx, buffer)
@@ -169,7 +198,11 @@ local add_modified_highlight = function(idx, buffer)
   local hl = vim.api.nvim_get_hl(0, { name = hl_name, create = false })
   local fg = hl.fg or 0xffff00
   vim.api.nvim_set_hl(0, hl_name, { fg = fg })
-  vim.api.nvim_buf_add_highlight(BAFA_BUF_ID, BAFA_NS_ID, hl_name, idx - 1, 4, -1)
+
+  vim.api.nvim_buf_set_extmark(BAFA_BUF_ID, BAFA_NS_ID, idx - 1, 4, {
+    end_col = -1,
+    hl_group = hl_name,
+  })
 end
 
 local add_diagnostics_icons = function(idx, buffer)
@@ -214,11 +247,8 @@ function M.toggle()
   local has_diagnostics = false
 
   for idx, buffer in ipairs(valid_buffers) do
-    -- add highlights
     add_ft_icon_highlight(idx, buffer)
-    -- add modified highlights
     add_modified_highlight(idx, buffer)
-    -- add diagnostics
     if Config.get().diagnostics then
       if add_diagnostics_icons(idx, buffer) == true then
         has_diagnostics = true
@@ -227,7 +257,6 @@ function M.toggle()
   end
 
   if has_diagnostics then
-    -- increase the width of the window to accommodate the diagnostics icons
     vim.api.nvim_win_set_width(BAFA_WIN_ID, vim.api.nvim_win_get_width(BAFA_WIN_ID) + 4)
   end
 
