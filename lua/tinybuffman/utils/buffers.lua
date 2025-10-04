@@ -1,8 +1,8 @@
-local text_utils = require("bafa.utils.text")
+local text_utils = require("tbm.utils.text")
 
 local M = {}
 
----@class BafaBuffer
+---@class TBMBuffer
 ---@field name string The display name of the buffer
 ---@field path string The full path to the buffer
 ---@field number integer The buffer number
@@ -16,8 +16,8 @@ local M = {}
 M.is_valid_buffer = function(buffer_number)
   local buffer_name = vim.api.nvim_buf_get_name(buffer_number)
   local is_listed = vim.bo[buffer_number].buflisted == true
-  local is_not_bafa_buffer = buffer_name ~= "bafa-menu"
-  if buffer_name ~= "" and is_not_bafa_buffer and is_listed then
+  local is_not_tbm_buffer = buffer_name ~= "tbm-menu"
+  if buffer_name ~= "" and is_not_tbm_buffer and is_listed then
     return true
   end
   return false
@@ -47,7 +47,7 @@ end
 
 ---Get a buffer by its index in the buffer list
 ---@param buffer_index integer The 1-based index
----@return BafaBuffer|nil
+---@return TBMBuffer|nil
 M.get_buffer_by_index = function(buffer_index)
   local buffer_numbers = M.get_buffers_as_table()
   local buffer = buffer_numbers[buffer_index]
@@ -62,7 +62,7 @@ M.get_buffer_by_index = function(buffer_index)
 end
 
 ---Get all valid buffers as a table
----@return BafaBuffer[]
+---@return TBMBuffer[]
 M.get_buffers_as_table = function()
   local buffers = {}
   local buffer_numbers = vim.api.nvim_list_bufs()

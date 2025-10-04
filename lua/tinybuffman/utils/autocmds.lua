@@ -1,7 +1,7 @@
 local M = {}
 
 function M.defaults(bufnr)
-  local augroup = vim.api.nvim_create_augroup("BafaMenu", { clear = true })
+  local augroup = vim.api.nvim_create_augroup("TBMMenu", { clear = true })
 
   vim.api.nvim_create_autocmd("BufModifiedSet", {
     group = augroup,
@@ -17,7 +17,7 @@ function M.defaults(bufnr)
     nested = true,
     once = true,
     callback = function()
-      require("bafa.ui").toggle()
+      require("tbm.ui").toggle()
     end,
   })
 end

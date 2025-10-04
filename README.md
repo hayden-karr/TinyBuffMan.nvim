@@ -1,8 +1,6 @@
 <div align="center">
 
-![Bafa Logo](logo.svg)
-
-# bafa.nvim
+# TinyBuffMan.nvim
 
 ![Lua](https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/mistweaverco/bafa.nvim?style=for-the-badge)](https://github.com/mistweaverco/bafa.nvim/releases/latest)
@@ -11,9 +9,7 @@
 
 <p></p>
 
-A minimal BufExplorer alternative for lazy people for your favorite editor.
-
-Bafa is swahili for "buffer".
+A _tiny_ BufExplorer alternative.
 
 It allows you to quickly switch between buffers and delete them.
 
@@ -27,7 +23,7 @@ It allows you to quickly switch between buffers and delete them.
 
 ## Requirements
 
-- [Neovim](https://github.com/neovim/neovim) (tested with 0.9.0)
+- [Neovim](https://github.com/neovim/neovim) (tested with 0.12.0)
 
 > [!TIP]
 > For having fancy icons, you need to install a patched font.
@@ -44,7 +40,7 @@ Via [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 require('lazy').setup({
   -- Buffer management
-  { 'mistweaverco/bafa.nvim' },
+  { 'hayden-karr/TinyBuffMan.nvim' },
 })
 ```
 
@@ -54,17 +50,23 @@ require('lazy').setup({
 require('lazy').setup({
   -- Buffer management
   {
-    'mistweaverco/bafa.nvim',
+    'hayden-karr/TinyBuffMan.nvim',
     opts = {
       width = 60,
       height = 10,
-      title = "Bafa",
+      title = "Buffers",
       title_pos = "center",
       relative = "editor",
       border = "rounded",
       style = "minimal",
       diagnostics = true,
       confirm_delete = true,
+      icons = {
+        error = " ",
+        warning = " ",
+        info = " ",
+        hint = " ",
+      },
     }
   },
 })
@@ -73,8 +75,13 @@ require('lazy').setup({
 
 ## Usage
 
-### `require('bafa.ui').toggle()`
+### `require('tbm.ui').toggle()`
 
 Opens up a floating window with your buffers.
 
 Press enter to select a buffer or press `d` to delete a buffer.
+
+## Inspiration
+
+Bafa.nvim - this is a fork of it but I thought it would be
+funny to have the name as TinyBuffMan.

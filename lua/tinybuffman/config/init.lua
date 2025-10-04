@@ -1,6 +1,6 @@
 local M = {}
 
----@class BafaConfig
+---@class TBMConfig
 ---@field title string Window title
 ---@field title_pos "left"|"center"|"right" Title position
 ---@field relative "editor"|"win"|"cursor" Window positioning
@@ -10,34 +10,41 @@ local M = {}
 ---@field width integer|nil Window width (auto if nil)
 ---@field height integer|nil Window height (auto if nil)
 ---@field confirm_delete boolean Confirm before deleting modified buffers
+---@field icons table Diagnostic icons configuration
 
----@type BafaConfig
+---@type TBMConfig
 M.defaults = {
-  title = "Bafa",
+  title = "Buffers",
   title_pos = "center",
   relative = "editor",
   border = "rounded",
   style = "minimal",
   diagnostics = true,
   confirm_delete = true,
+  icons = {
+    error = " ",
+    warn = " ",
+    info = " ",
+    hint = " ",
+  },
 }
 
 M.options = M.defaults
 
 ---Setup configuration
----@param config BafaConfig|nil User configuration
+---@param config TBMConfig|nil User configuration
 M.setup = function(config)
   M.options = vim.tbl_deep_extend("force", M.defaults, config or {})
 end
 
 ---Update configuration
----@param config BafaConfig|nil Configuration updates
+---@param config TBMConfig|nil Configuration updates
 M.set = function(config)
   M.options = vim.tbl_deep_extend("force", M.options, config or {})
 end
 
 ---Get current configuration
----@return BafaConfig
+---@return TBMConfig
 M.get = function()
   return M.options
 end
