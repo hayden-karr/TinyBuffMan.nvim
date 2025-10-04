@@ -63,25 +63,51 @@ require('lazy').setup({
       confirm_delete = true,
       icons = {
         error = " ",
-        warning = " ",
+        warn = " ",
         info = " ",
         hint = " ",
       },
     }
   },
 })
+```
 
+Via built in vim.pack:
+
+```lua
+
+vim.pack.add({ { src = "https://github.com/hayden-karr/TinyBuffMan.nvim" } })
+
+require("tbm").setup({
+      width = 60,
+      height = 10,
+      title = "Buffers",
+      title_pos = "center",
+      relative = "editor",
+      border = "rounded",
+      style = "minimal",
+      diagnostics = true,
+      confirm_delete = true,
+      icons = {
+        error = " ",
+        warn = " ",
+        info = " ",
+        hint = " ",
+      },
+})
 ```
 
 ## Usage
 
 ### `require('tbm.ui').toggle()`
 
+### `vim.keymap.set("n", "<leader>be", '<cmd>lua require("tbm.ui").toggle()<CR>', { desc = "Toggle TBM" })`
+
 Opens up a floating window with your buffers.
 
 Press enter to select a buffer or press `d` to delete a buffer.
 
-## Inspiration
+## Acknowledgements
 
 Bafa.nvim - this is a fork of it but I thought it would be
 funny to have the name as TinyBuffMan.
