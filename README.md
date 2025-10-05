@@ -99,9 +99,13 @@ require("tbm").setup({
 
 ## Usage
 
-### `require('tbm.ui').toggle()`
+### Keymaps
 
-### `vim.keymap.set("n", "<leader>be", '<cmd>lua require("tbm.ui").toggle()<CR>', { desc = "Toggle TBM" })`
+`require('tbm.ui').toggle()`
+
+`vim.keymap.set("n", "<leader>be", '<cmd>lua require("tbm.ui").toggle()<CR>', { desc = "Toggle TBM" })`
+
+### What This Does
 
 Opens up a floating window with your buffers.
 
