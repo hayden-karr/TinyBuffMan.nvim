@@ -113,5 +113,5 @@ Press enter to select a buffer or press `d` to delete a buffer.
 
 ## Acknowledgements
 
-Bafa.nvim - this is a fork of it but I thought it would be
+[Bafa.nvim](https://github.com/mistweaverco/bafa.nvim) - this is a fork of it but I thought it would be
 funny to have the name as TinyBuffMan.
