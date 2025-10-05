@@ -9,7 +9,7 @@
 
 <p></p>
 
-A _tiny_ BufExplorer alternative.
+A _tiny_ buffer manager and minimal BufExplorer alternative.
 
 It allows you to quickly switch between buffers and delete them.
 
