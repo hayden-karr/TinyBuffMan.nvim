@@ -14,19 +14,19 @@ local M = {}
 
 ---@type TBMConfig
 M.defaults = {
-  title = "Buffers",
-  title_pos = "center",
-  relative = "editor",
-  border = "rounded",
-  style = "minimal",
-  diagnostics = true,
-  confirm_delete = true,
-  icons = {
-    error = " ",
-    warn = " ",
-    info = " ",
-    hint = " ",
-  },
+    title = "Buffers",
+    title_pos = "center",
+    relative = "editor",
+    border = "rounded",
+    style = "minimal",
+    diagnostics = true,
+    confirm_delete = true,
+    icons = {
+        error = " ",
+        warn = " ",
+        info = " ",
+        hint = " ",
+    },
 }
 
 M.options = M.defaults
@@ -34,19 +34,19 @@ M.options = M.defaults
 ---Setup configuration
 ---@param config TBMConfig|nil User configuration
 M.setup = function(config)
-  M.options = vim.tbl_deep_extend("force", M.defaults, config or {})
+    M.options = vim.tbl_deep_extend("force", M.defaults, config or {})
 end
 
 ---Update configuration
 ---@param config TBMConfig|nil Configuration updates
 M.set = function(config)
-  M.options = vim.tbl_deep_extend("force", M.options, config or {})
+    M.options = vim.tbl_deep_extend("force", M.options, config or {})
 end
 
 ---Get current configuration
 ---@return TBMConfig
 M.get = function()
-  return M.options
+    return M.options
 end
 
 return M
