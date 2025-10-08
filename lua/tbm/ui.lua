@@ -56,7 +56,7 @@ local function create_window(content_width)
   local max_height = vim.api.nvim_win_get_height(0)
   local buffer_lines = BufferUtils.get_lines_buffer_names()
   local width = math.min(max_width, content_width)
-  local height = math.min(max_height, buffer_lines)
+  local height = math.max(1, math.min(max_height, buffer_lines))
 
   TBM_WIN_ID = vim.api.nvim_open_win(bufnr, true, {
     title = tbm_config.title,
@@ -255,33 +255,22 @@ function M.toggle()
 
   local valid_buffers = BufferUtils.get_buffers_as_table()
 
-  -- Cache diagnostics for all buffers upfront
-  local buffer_diagnostics = {}
-  if Config.get().diagnostics then
-    for _, buffer in ipairs(valid_buffers) do
-      buffer_diagnostics[buffer.number] = get_diagnostics(buffer.number)
-    end
-  end
-
   -- Width calculation
-  local longest_total_width = 0
+  local longest_name_width = 0
   for _, buffer in ipairs(valid_buffers) do
-    local buffer_name_width = vim.fn.strwidth(buffer.name)
-    local diagnostic_count = buffer_diagnostics[buffer.number] and #buffer_diagnostics[buffer.number] or 0
-    local diagnostic_width = diagnostic_count * 3
-    local total_for_this_buffer = buffer_name_width + diagnostic_width
-
-    if total_for_this_buffer > longest_total_width then
-      longest_total_width = total_for_this_buffer
+    local name_width = vim.fn.strwidth(buffer.name)
+    if name_width > longest_name_width then
+      longest_name_width = name_width
     end
   end
 
   -- Add the fixed overhead (line numbers, icon, spacing, padding)
   local line_number_width = #tostring(#valid_buffers) + 1
   local icon_and_spacing = 5
+  local diagnostic_space = 15
   local padding = 5
 
-  local total_width = line_number_width + icon_and_spacing + longest_total_width + padding
+  local total_width = line_number_width + icon_and_spacing + longest_name_width + diagnostic_space + padding
 
   -- Create window using the helper function
   local win_info = create_window(total_width)
@@ -310,7 +299,8 @@ function M.toggle()
     add_ft_icon_highlight(idx, buffer)
     add_modified_highlight(idx, buffer)
     if Config.get().diagnostics then
-      add_diagnostics_icons(idx, buffer, buffer_diagnostics[buffer.number])
+      local diags = get_diagnostics(buffer.number)
+      add_diagnostics_icons(idx, buffer, diags)
     end
   end
 
