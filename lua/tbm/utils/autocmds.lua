@@ -3,7 +3,7 @@ local M = {}
 function M.defaults(bufnr)
     local augroup = vim.api.nvim_create_augroup("TBMMenu", { clear = true })
 
-    vim.api.nvim_create_autocmd("BufModifiedSet", {
+    vim.api.nvim_create_autocmd("OptionSet", {
         group = augroup,
         buffer = bufnr,
         callback = function()
